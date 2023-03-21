@@ -8,24 +8,23 @@ services:
             ZOOKEEPER_CLIENT_PORT: 2181
             ZOOKEEPER_TICK_TIME: 2000
         ports:
-            - 22181:2181
-  
+            - "22181:2181"
+
     kafka:
-        image: confluentinc/cp-kafka:latest
-        container_name: kafka
-        depends_on:
-            - zookeeper
+        image: obsidiandynamics/kafka
+        restart: "no"
         ports:
-            - 29092:29092
-        volumes:
-            - ./notices:/home/appuser
+            - "2181:2181"
+            - "9092:9092"
         environment:
-            KAFKA_LISTENERS: EXTERNAL_DIFFERENT_HOST://:29092,INTERNAL://:9092
-            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL_DIFFERENT_HOST://${KAFKA_HOSTNAME}:29092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_DIFFERENT_HOST:PLAINTEXT
-            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-            KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_LISTENERS: "INTERNAL://:29092,EXTERNAL://:9092"
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://${KAFKA_HOSTNAME}:9092
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+            KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+            KAFKA_ZOOKEEPER_SESSION_TIMEOUT: "6000"
+            KAFKA_RESTART_ATTEMPTS: "10"
+            KAFKA_RESTART_DELAY: "5"
+            ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
       
     ##############################
     # kafka-convergence-db
@@ -49,7 +48,19 @@ services:
             - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka-convergence"
             - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
 
-
+    ##############################
+    # kafdrop
+    # IHM permettant de consulter les messages produits par Kafka via le port 9000
+    kafdrop:
+        image: obsidiandynamics/kafdrop
+        restart: "no"
+        ports:
+            - "9000:9000"
+        environment:
+            KAFKA_BROKERCONNECT: "kafka:29092"
+            JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+        depends_on:
+            - "kafka"
 
     #################################
     # kafka-convergence-db-adminer
