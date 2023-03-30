@@ -28,6 +28,8 @@ services:
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS}
+      URL_ONLINEID2PPN: ${BACON2KAFKA_API_URL_ONLINEID2PPN}
+      URL_PRINTID2PPN: ${BACON2KAFKA_API_URL_PRINTID2PPN}
     ports:
       - ${BACON2KAFKA_API_HTTP_PORT}:8082
     labels:
