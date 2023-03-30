@@ -10,7 +10,7 @@ version: "3.5"
 services:
   ############################
   # bacon2kafka-api
-  # API de convergence
+  # API de bacon2kafka-api
   # (écrite en java spring boot)
   bacon2kafka-api:
     image: abesesr/convergence:${BACON2KAFKA_API_VERSION}
@@ -40,7 +40,7 @@ services:
       - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
 
   #######################################
-  # qualimarc-watchtower
+  # bacon2kafka-api-watchtower
   # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
   # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
   # plus d'info : https://containrrr.dev/watchtower
