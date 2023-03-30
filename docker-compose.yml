@@ -1,5 +1,5 @@
 #
-# Ci-dessous la config qui permet de lancer convergence-docker
+# Ci-dessous la config qui permet de lancer bacon2kafka-docker
 #
 # Remarque: avant de lancer docker-compose up, il faut régler le fichier .env
 # en partant du fichier .env-dist qui donne les variables d'environnements
@@ -9,7 +9,7 @@
 version: "3.5"
 services:
   ############################
-  # convergence-api
+  # bacon2kafka-api
   # API de convergence
   # (écrite en java spring boot)
   bacon2kafka-api:
