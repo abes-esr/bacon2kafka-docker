@@ -1,80 +1,68 @@
-version: "3"
+#
+# Ci-dessous la config qui permet de lancer convergence-docker
+#
+# Remarque: avant de lancer docker-compose up, il faut régler le fichier .env
+# en partant du fichier .env-dist qui donne les variables d'environnements
+# à personnaliser et des exemples de valeurs.
+#
+
+version: "3.5"
 services:
-    zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-        container_name: zookeeper-kafka
-        hostname: zookeeper
-        environment:
-            ZOOKEEPER_CLIENT_PORT: 2181
-            ZOOKEEPER_TICK_TIME: 2000
-        ports:
-            - "22181:2181"
+  ############################
+  # convergence-api
+  # API de convergence
+  # (écrite en java spring boot)
+  bacon2kafka-api:
+    image: abesesr/convergence:${BACON2KAFKA_API_VERSION}
+    container_name: bacon2kafka-api
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    environment:
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${BACON2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS}
+    ports:
+      - ${BACON2KAFKA_API_HTTP_PORT}:8082
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=bacon2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
 
-    kafka:
-        image: obsidiandynamics/kafka
-        restart: "no"
-        ports:
-            - "2181:2181"
-            - "9092:9092"
-        environment:
-            KAFKA_LISTENERS: "INTERNAL://:29092,EXTERNAL://:9092"
-            KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://${KAFKA_HOSTNAME}:9092
-            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
-            KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
-            KAFKA_ZOOKEEPER_SESSION_TIMEOUT: "6000"
-            KAFKA_RESTART_ATTEMPTS: "10"
-            KAFKA_RESTART_DELAY: "5"
-            ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
-      
-    ##############################
-    # kafka-convergence-db
-    # Base de données postgresql de kafka-convergence
-    kafka-convergence-db:
-        image: abesesr/postgres-fr_fr:15.1.0
-        container_name: kafka-convergence-db
-        restart: unless-stopped
-        mem_limit: ${MEM_LIMIT}
-        environment:
-            # cf https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
-            POSTGRES_DB: "kafka_convergence"
-            POSTGRES_USER: ${KAFKA_CONVERGENCE_DB_POSTGRES_USER}
-            POSTGRES_PASSWORD: ${KAFKA_CONVERGENCE_DB_POSTGRES_PASSWORD}
-        volumes:
-            - ./volumes/kafka-convergence-db/pgdata/:/var/lib/postgresql/data/
-        labels:
-            # pour envoyer les logs dans le puits de log de l'abes
-            - "co.elastic.logs/enabled=true"
-            - "co.elastic.logs/processors.add_fields.target="
-            - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka-convergence"
-            - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
-
-    ##############################
-    # kafdrop
-    # IHM permettant de consulter les messages produits par Kafka via le port 9000
-    kafdrop:
-        image: obsidiandynamics/kafdrop
-        restart: "no"
-        ports:
-            - "9000:9000"
-        environment:
-            KAFKA_BROKERCONNECT: "kafka:29092"
-            JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
-        depends_on:
-            - "kafka"
-
-    #################################
-    # kafka-convergence-db-adminer
-    # Interface d'admin de postgresql
-    kafka-convergence-db-adminer:
-        image: adminer:4.8.1
-        container_name: kafka-convergence-db-adminer
-        restart: unless-stopped
-        mem_limit: ${MEM_LIMIT}
-        ports:
-            - ${KAFKA_CONVERGENCE_DB_ADMINER_HTTP_PORT}:8080
-        depends_on:
-            - kafka-convergence-db
-        environment:
-            ADMINER_DEFAULT_SERVER: "kafka-convergence-db"
-        logging:
-            driver: none # pas de log pour adminer pour ne pas polluer
+  #######################################
+  # qualimarc-watchtower
+  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
+  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
+  # plus d'info : https://containrrr.dev/watchtower
+  # cf README.md pour explications : https://github.com/abes-esr/qualimarc-docker#d%C3%A9ploiement-continu
+  bacon2kafka-api-watchtower:
+    image: containrrr/watchtower:1.4.0
+    container_name: bacon2kafka-api-watchtower
+    restart: unless-stopped
+    mem_limit: 2g
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_DEBUG: "false"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
+      WATCHTOWER_RUN_ONCE: ${BACON2KAFKA_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_NOTIFICATIONS: "slack"
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
+      WATCHTOWER_SCOPE: "bacon2kafka-watchtower-scope"
+    labels:
+      - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
