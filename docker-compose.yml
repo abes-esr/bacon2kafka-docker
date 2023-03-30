@@ -27,7 +27,7 @@ services:
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
-      SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP-SERVERS}
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}
       URL_ONLINEID2PPN: ${BACON2KAFKA_API_URL_ONLINEID2PPN}
       URL_PRINTID2PPN: ${BACON2KAFKA_API_URL_PRINTID2PPN}
     ports:
