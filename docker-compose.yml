@@ -73,3 +73,91 @@ services:
       WATCHTOWER_SCOPE: "bacon2kafka-watchtower-scope"
     labels:
       - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
+
+  ##############################
+  # logskbart-db
+  # Base de données postgresql de logskbart
+  logskbart-db:
+    image: abesesr/postgres-fr_fr:15.1.0
+    container_name: logskbart-db
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    ports:
+      - "5432:5432"
+    environment:
+      # cf https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
+      POSTGRES_DB: "logskbart"
+      POSTGRES_USER: ${LOGSKBART_DB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
+    volumes:
+      - ./volumes/logskbart-db/pgdata/:/var/lib/postgresql/data/
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=qualimarc"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
+
+
+
+  #################################
+  # logskbart-db-adminer
+  # Interface d'admin de postgresql
+  logskbart-db-adminer:
+    image: adminer:4.8.1
+    container_name: logskbart-db-adminer
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    ports:
+      - ${LOGSKBART_DB_ADMINER_HTTP_PORT}:8080
+    depends_on:
+      - logskbart-db
+    environment:
+      ADMINER_DEFAULT_SERVER: "logskbart-db"
+    logging:
+      driver: none # pas de log pour adminer pour ne pas polluer
+
+
+
+  #######################################
+  # logskbart-db-dumper
+  # Dump de la base de données postgresql
+  # (dump tous les jours pour les sauvegardes)
+  # https://github.com/tiredofit/docker-db-backup
+  logskbart-db-dumper:
+    image: tiredofit/db-backup:3.3.11
+    container_name: logskbart-db-dumper
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    volumes:
+      - ${LOGSKBART_DB_DUMP_WORKDIR}:/backup/
+    depends_on:
+      - logskbart-db
+    environment:
+      # DB_DUMP_BEGIN: "0130" <= tous les jours à 1h30 du matin GMT
+      # DB_DUMP_FREQ: 1440 <= chaque jour
+      # DB_CLEANUP_TIME: 10080 (1440*7) <= conserve uniquement les 7 derniers jours
+      DB_TYPE: "pgsql"
+      DB_HOST: "logskbart-db"
+      DB_NAME: "logskbart"
+      DB_USER: ${LOGSKBART_DB_POSTGRES_USER}
+      DB_PASS: ${LOGSKBART_DB_POSTGRES_PASSWORD}
+      DB_DUMP_BEGIN: "0130"
+      DB_DUMP_FREQ: 1440
+      DB_CLEANUP_TIME: 10080
+      SPLIT_DB: "true"
+      COMPRESSION: "GZ"
+      DEBUG_MODE: "false"
+      CONTAINER_ENABLE_SCHEDULING: "false"
+      CONTAINER_ENABLE_MONITORING: "false"
+    labels:
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=adhoc"
+      # log multiline aussi pour ce conteneur avec des lignes qui ressemblent à ceci:
+      # 2022-08-01.14:55:00 [NOTICE] ** [db-backup] Dumping PostgresSQL database: 'logskbart' and compressing with 'gzip'
+      - "co.elastic.logs/multiline.type=pattern"
+      - "co.elastic.logs/multiline.pattern='^.*Dumping PostgresSQL database'"
+      - "co.elastic.logs/multiline.negate=true"
+      - "co.elastic.logs/multiline.match=after"
