@@ -6,7 +6,7 @@
 # à personnaliser et des exemples de valeurs.
 #
 
-version: "3.5"
+version: "3.7"
 services:
   ############################
   # bacon2kafka-api
@@ -28,9 +28,9 @@ services:
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}
-      SPRING_DATASOURCE_BASEXML_SDBCURL: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_SDBCURL}
+      SPRING_DATASOURCE_BASEXML_JDBCURL: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_JDBCURL}
       SPRING_DATASOURCE_BASEXML_USERNAME: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_USERNAME}
-      SPRING_DATASOURCE_BASEXML_PASSWORLD: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_PASSWORLD}
+      SPRING_DATASOURCE_BASEXML_PASSWORD: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_PASSWORD}
       URL_ONLINEID2PPN: ${BACON2KAFKA_API_URL_ONLINEID2PPN}
       URL_PRINTID2PPN: ${BACON2KAFKA_API_URL_PRINTID2PPN}
       URL_DAT2PPN: ${BACON2KAFKA_API_URL_DAT2PPN}
@@ -130,7 +130,7 @@ services:
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
-      - ${LOGSKBART_DB_DUMP_WORKDIR}:/backup/
+      - ./volumes/logskbart-db/dump/:/backup/
     depends_on:
       - logskbart-db
     environment:
