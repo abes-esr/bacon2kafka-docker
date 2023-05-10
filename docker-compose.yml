@@ -74,6 +74,70 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
 
+  ############################
+  # bacon2kafka-api
+  # API de bacon2kafka-api
+  # (écrite en java spring boot)
+  logskbart-api:
+    image: abesesr/convergence:${LOGSKBART_API_VERSION}
+    container_name: logskbart-api
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    environment:
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${BACON2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${LOGSKBART_API_SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
+      SPRING_DATASOURCE_URL: ${LOGSKBART_API_SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${LOGSKBART_API_SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${LOGSKBART_API_SPRING_DATASOURCE_PASSWORD}
+
+    ports:
+      - ${LOGSKBART_API_HTTP_PORT}:8082
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=logskbart-watchtower-scope"
+
+
+  #######################################
+  # logskbart-api-watchtower
+  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
+  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
+  # plus d'info : https://containrrr.dev/watchtower
+  # cf README.md pour explications : https://github.com/abes-esr/qualimarc-docker#d%C3%A9ploiement-continu
+  logskbart-api-watchtower:
+    image: containrrr/watchtower:1.4.0
+    container_name: logskbart-api-watchtower
+    restart: unless-stopped
+    mem_limit: 2g
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_DEBUG: "false"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
+      WATCHTOWER_RUN_ONCE: ${BACON2KAFKA_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_NOTIFICATIONS: "slack"
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
+      WATCHTOWER_SCOPE: "logskbart-watchtower-scope"
+    labels:
+      - "com.centurylinklabs.watchtower.scope=logskbart-watchtower-scope"
+
   ##############################
   # logskbart-db
   # Base de données postgresql de logskbart
@@ -82,8 +146,6 @@ services:
     container_name: logskbart-db
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
-    ports:
-      - "5432:5432"
     environment:
       # cf https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
       POSTGRES_DB: "logskbart"
