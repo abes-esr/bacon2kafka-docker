@@ -41,10 +41,10 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=bacon2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
-      - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
+      - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
 
   #######################################
   # kbart2kafka-api-watchtower

@@ -103,9 +103,9 @@ docker-compose up
 ```
 Le ``pull`` aura pour effet de télécharger l'éventuelle dernière images docker disponible pour la version glissante en cours (ex: ``develop-kbart2kafka-api`` ou ``main-kbart2kafka-api``). Sans le pull c'est la dernière image téléchargée qui sera utilisée.
 
-Ou bien [lancer le conteneur ``bacon2kafka-watchtower``](https://github.com/abes-esr/convergence-bacon-docker/blob/develop/README.md#d%C3%A9ploiement-continu) qui le fera automatiquement toutes les quelques secondes pour vous.
+Ou bien [lancer le conteneur ``kbart2kafka-watchtower``](https://github.com/abes-esr/convergence-bacon-docker/blob/develop/README.md#d%C3%A9ploiement-continu) qui le fera automatiquement toutes les quelques secondes pour vous.
 
 ## Architecture
 
-Les codes de source de bacon2kafka sont ici :
-- https://github.com/abes-esr/kbart2kafka-api : code source de l'API de bacon2kafka
+Les codes de source de kbart2kafka sont ici :
+- https://github.com/abes-esr/kbart2kafka-api : code source de l'API de kbart2kafka
