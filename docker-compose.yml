@@ -1,5 +1,5 @@
 #
-# Ci-dessous la config qui permet de lancer bacon2kafka-docker
+# Ci-dessous la config qui permet de lancer convergence-bacon-docker
 #
 # Remarque: avant de lancer docker-compose up, il faut régler le fichier .env
 # en partant du fichier .env-dist qui donne les variables d'environnements
@@ -9,34 +9,34 @@
 version: "3.7"
 services:
   ############################
-  # bacon2kafka-api
-  # API de bacon2kafka-api
+  # kbart2kafka-api
+  # API de kbart2kafka-api
   # (écrite en java spring boot)
-  bacon2kafka-api:
-    image: abesesr/convergence:${BACON2KAFKA_API_VERSION}
-    container_name: bacon2kafka-api
+  kbart2kafka-api:
+    image: abesesr/convergence:${KBART2KAFKA_API_VERSION}
+    container_name: kbart2kafka-api
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
       # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
-      SPRING_PROFILES_ACTIVE: ${BACON2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: ${KBART2KAFKA_API_SPRING_PROFILES_ACTIVE}
       # Pour surcharger les paramètres spring du application-xxx.properties
       # ci-dessous via le système de .env de docker
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
-      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${BACON2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}
-      SPRING_DATASOURCE_BASEXML_JDBCURL: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_JDBCURL}
-      SPRING_DATASOURCE_BASEXML_USERNAME: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_USERNAME}
-      SPRING_DATASOURCE_BASEXML_PASSWORD: ${BACON2KAFKA_API_SPRING_DATASOURCE_BASEXML_PASSWORD}
-      URL_ONLINEID2PPN: ${BACON2KAFKA_API_URL_ONLINEID2PPN}
-      URL_PRINTID2PPN: ${BACON2KAFKA_API_URL_PRINTID2PPN}
-      URL_DAT2PPN: ${BACON2KAFKA_API_URL_DAT2PPN}
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KBART2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}
+      SPRING_DATASOURCE_BASEXML_JDBCURL: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_JDBCURL}
+      SPRING_DATASOURCE_BASEXML_USERNAME: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_USERNAME}
+      SPRING_DATASOURCE_BASEXML_PASSWORD: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_PASSWORD}
+      URL_ONLINEID2PPN: ${KBART2KAFKA_API_URL_ONLINEID2PPN}
+      URL_PRINTID2PPN: ${KBART2KAFKA_API_URL_PRINTID2PPN}
+      URL_DAT2PPN: ${KBART2KAFKA_API_URL_DAT2PPN}
 
     ports:
-      - ${BACON2KAFKA_API_HTTP_PORT}:8082
+      - ${KBART2KAFKA_API_HTTP_PORT}:8082
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
@@ -47,14 +47,14 @@ services:
       - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
 
   #######################################
-  # bacon2kafka-api-watchtower
+  # kbart2kafka-api-watchtower
   # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
   # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
   # plus d'info : https://containrrr.dev/watchtower
   # cf README.md pour explications : https://github.com/abes-esr/qualimarc-docker#d%C3%A9ploiement-continu
-  bacon2kafka-api-watchtower:
+  kbart2kafka-api-watchtower:
     image: containrrr/watchtower:1.4.0
-    container_name: bacon2kafka-api-watchtower
+    container_name: kbart2kafka-api-watchtower
     restart: unless-stopped
     mem_limit: 2g
     volumes:
@@ -65,18 +65,18 @@ services:
       WATCHTOWER_DEBUG: "false"
       WATCHTOWER_NO_STARTUP_MESSAGE: "true"
       WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${BACON2KAFKA_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_RUN_ONCE: ${CONVERGENCE_BACON_API_WATCHTOWER_RUN_ONCE}
       WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${CONVERGENCE_BACON_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${KBART2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
       WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
-      WATCHTOWER_SCOPE: "bacon2kafka-watchtower-scope"
+      WATCHTOWER_SCOPE: "kbart2kafka-watchtower-scope"
     labels:
-      - "com.centurylinklabs.watchtower.scope=bacon2kafka-watchtower-scope"
+      - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
 
   ############################
-  # bacon2kafka-api
-  # API de bacon2kafka-api
+  # kbart2kafka-api
+  # API de kbart2kafka-api
   # (écrite en java spring boot)
   logskbart-api:
     image: abesesr/convergence:${LOGSKBART_API_VERSION}
@@ -87,7 +87,7 @@ services:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
       # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
-      SPRING_PROFILES_ACTIVE: ${BACON2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: ${KBART2KAFKA_API_SPRING_PROFILES_ACTIVE}
       # Pour surcharger les paramètres spring du application-xxx.properties
       # ci-dessous via le système de .env de docker
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
@@ -129,10 +129,10 @@ services:
       WATCHTOWER_DEBUG: "false"
       WATCHTOWER_NO_STARTUP_MESSAGE: "true"
       WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${BACON2KAFKA_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_RUN_ONCE: ${CONVERGENCE_BACON_API_WATCHTOWER_RUN_ONCE}
       WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BACON2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${CONVERGENCE_BACON_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
       WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
       WATCHTOWER_SCOPE: "logskbart-watchtower-scope"
     labels:
