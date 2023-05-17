@@ -85,6 +85,8 @@ services:
     container_name: logskbart-api
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
+    volumes:
+      - ${LOGSKBART_API_WORKDIR}:/tmp/
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
