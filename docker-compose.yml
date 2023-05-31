@@ -78,8 +78,8 @@ services:
       - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
 
   ############################
-  # kbart2kafka-api
-  # API de kbart2kafka-api
+  # logskbart-api
+  # API de logskbart-api
   # (écrite en java spring boot)
   logskbart-api:
     image: abesesr/convergence:${LOGSKBART_API_VERSION}
@@ -99,7 +99,7 @@ services:
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${LOGSKBART_API_SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
-      SPRING_DATASOURCE_URL: 'jdbc:postgresql://logkbart-db:5432/logkbart'
+      SPRING_DATASOURCE_URL: 'jdbc:postgresql://logskbart-db:5432/logskbart'
       SPRING_DATASOURCE_USERNAME: ${LOGSKBART_DB_POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
       LOADERTYPE: ${LOGSKBART_API_LOADERTYPE}
