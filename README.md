@@ -3,22 +3,50 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/abesesr/convergence.svg)](https://hub.docker.com/r/abesesr/convergence/)
 
 
-Ce dépôt contient la configuration docker 🐳 pour déployer l'application convergence Bacon2Kafka (cf sources de l'[api](https://github.com/abes-esr/kbart2kafka-api)) en local sur le poste d'un développeur, ou bien sur les serveurs de dev, test et prod.
+Ce dépôt contient la configuration docker 🐳 pour déployer l'échosystème des applications convergence Kbart2Kafka (cf sources de l'[api](https://github.com/abes-esr/kbart2kafka-api)) en local sur le poste d'un développeur, ou bien sur les serveurs de dev, test et prod.
 
-## URLs de bacon2kafka
+## contenu du docker-compose.yml
+Le docker-compose.yml définit les containers suivants (hors Watchtower)
+- kbart2kafka-api : Web Service permettant à partir d'un fichier tsv de produire les données qu'il contient sur un serveur Kafka
+- logskbart-api : composé de : 
+    - 2 listener Kafka permettant d'une part de récupérer les logs d'exécution du producteur et de les stocker dans une base de données Postgresql, et d'autre part de récupérer les lignes kbart de Kafka pour les agréger dans la base de Bacon ou dans un fichier tsv.
+    - 1 web service permettant de récupérer les logs pour un package kbart chargé à une date donnée.
+- logskbart-db : base de données postgresql servant de stockage aux lignes de logs consommées dans Kafka.
+- logskbart-db-dumper : système de sauvegarde de la base de données postgresql
+- logskbart-db-adminer : interface Web d'accès à la base de données postgresql
 
-Les URLs correspondantes aux déploiements en local, dev, test et prod de bacon2kafka sont les suivantes :
+## URLs de kbart2kafka
+
+Les URLs correspondant aux déploiements en local, dev, test et prod de kbart2kafka sont les suivantes :
 
 - local :
     - http://127.0.0.1:8080/ : URL interne de kbart2kafka-api
 - dev :
     - http://cafeier-dev.v212.abes.fr:8080/ : URL de kbart2kafka-api
-    - http://cafeier-dev.v212.abes.fr:9000/ : Kafdrop
 - test :
     - http://cafeier-test.v202.abes.fr:8080/ :  URL de kbart2kafka-api
-    - http://cafeier-test.v202.abes.fr:9000/ : Kafdrop
 - prod
     - pas encore defini
+
+## URLs de logskbart
+
+Les URLs correspondant aux déploiements en local, dev, test et prod de logskbart sont les suivantes : 
+
+- local :
+    - http://127.0.0.1:8083/ : URL interne de kbart2kafka-api
+- dev :
+    - http://cafeier-dev.v212.abes.fr:8083/ : URL de logskbart-api
+- test :
+    - http://cafeier-test.v202.abes.fr:8083/ :  URL de logskbart-api
+- prod
+    - pas encore defini
+
+## URLs adminer 
+
+Les URLs permettant d'accéder à l'adminer de la base postgresql sont les suivantes : 
+
+- dev : http://cafeier-dev.v212.abes.fr:16082/ 
+- test : http://cafeier-test.v202.abes.fr:16082/
 
 ## Prérequis
 
@@ -77,6 +105,34 @@ Cela va afficher les 100 dernière lignes de logs générées par l'application 
 ## Configuration
 
 Pour configurer l'application, vous devez créer et personnaliser un fichier ``/opt/pod/convergence-bacon-docker/.env`` (cf section [Installation](#installation)). Les paramètres à placer dans ce fichier ``.env`` et des exemples de valeurs sont indiqués dans le fichier [``.env-dist``](https://github.com/abes-esr/convergence-bacon-docker/blob/develop/.env-dist)
+
+## Sauvegardes
+
+Les éléments suivants sont à sauvegarder:
+- ``.env`` : contient la configuration spécifique de notre déploiement
+- ``volumes/item-db/dump/`` : contient les dumps quotidiens de la base de données postgresql de item
+
+Le répertoire suivant est à exclure des sauvegardes :
+- ``volumes/item-db/pgdata/`` : contient les données binaires de la base de données postgresql item
+
+### Restauration depuis une sauvegarde
+
+Restaurez le dernier dump de la base de données postgresql de logskbart :
+- récupérer le dernier dump généré par ``logskbart-db-dumper`` depuis le système de sauvegarde (le fichier dump ressemble à ceci ``pgsql_logskbart_logskbart-db_20220801-143201.sql.gz``) et placez le fichier dump récupéré (sans le décompresser) dans ``=volumes/logskbart-db/dump/`` sur la machine qui doit héberger la base de données
+- ensuite lancez uniquement les conteneurs ``logskbart-db`` et ``logskbart-db-dumper`` :
+   ```bash
+   docker-compose up -d logskbart-db logskbart-db-dumper
+   ```
+- lancez le script de restauration ``restore`` comme ceci et suivez les instructions :
+   ```bash
+   docker exec -it logskbart-db-dumper restore
+   ```
+- C'est bon, la base de données logskbart est alors restaurée
+
+Lancez alors toute les applications et vérifiez qu'elle fonctionne bien :
+```bash
+docker-compose up -d
+```
 
 ## Déploiement continu
 
