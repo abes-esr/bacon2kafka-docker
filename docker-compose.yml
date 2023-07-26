@@ -9,37 +9,27 @@
 version: "3.7"
 services:
   ############################
-  # kbart2kafka-api
-  # API de kbart2kafka-api
+  # kbart2kafka
   # (écrite en java spring boot)
-  kbart2kafka-api:
-    image: abesesr/convergence:${KBART2KAFKA_API_VERSION}
-    container_name: kbart2kafka-api
+  kbart2kafka:
+    image: abesesr/convergence:${KBART2KAFKA_VERSION}
+    container_name: kbart2kafka
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
       # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
-      SPRING_PROFILES_ACTIVE: ${KBART2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       # Pour surcharger les paramètres spring du application-xxx.properties
       # ci-dessous via le système de .env de docker
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
-      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KBART2KAFKA_API_SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS}
-      SPRING_DATASOURCE_BASEXML_JDBCURL: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_JDBCURL}
-      SPRING_DATASOURCE_BASEXML_USERNAME: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_USERNAME}
-      SPRING_DATASOURCE_BASEXML_PASSWORD: ${KBART2KAFKA_API_SPRING_DATASOURCE_BASEXML_PASSWORD}
-      URL_ONLINEID2PPN: ${KBART2KAFKA_API_URL_ONLINEID2PPN}
-      URL_PRINTID2PPN: ${KBART2KAFKA_API_URL_PRINTID2PPN}
-      URL_DAT2PPN: ${KBART2KAFKA_API_URL_DAT2PPN}
-      URL_DOI2PPN: ${KBART2KAFKA_API_URL_DOI2PPN}
-      MAIL_WS_URL: ${KBART2KAFKA_API_MAIL_WS_URL}
-      MAIL_WS_RECIPIENT: ${KBART2KAFKA_API_MAIL_WS_RECIPIENT}
-
-    ports:
-      - ${KBART2KAFKA_API_HTTP_PORT}:8082
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SPRING_DATASOURCE_BASEXML_JDBCURL: ${KBART2KAFKA_SPRING_DATASOURCE_BASEXML_JDBCURL}
+      SPRING_DATASOURCE_BASEXML_USERNAME: ${KBART2KAFKA_SPRING_DATASOURCE_BASEXML_USERNAME}
+      SPRING_DATASOURCE_BASEXML_PASSWORD: ${KBART2KAFKA_SPRING_DATASOURCE_BASEXML_PASSWORD}
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
@@ -50,12 +40,12 @@ services:
       - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
 
   #######################################
-  # kbart2kafka-api-watchtower
+  # kbart2kafka-watchtower
   # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
   # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
-  kbart2kafka-api-watchtower:
+  kbart2kafka-watchtower:
     image: containrrr/watchtower:1.4.0
-    container_name: kbart2kafka-api-watchtower
+    container_name: kbart2kafka-watchtower
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
@@ -66,14 +56,77 @@ services:
       WATCHTOWER_DEBUG: "false"
       WATCHTOWER_NO_STARTUP_MESSAGE: "true"
       WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${CONVERGENCE_BACON_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
       WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${CONVERGENCE_BACON_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${KBART2KAFKA_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${KBART2KAFKA_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
       WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
       WATCHTOWER_SCOPE: "kbart2kafka-watchtower-scope"
     labels:
       - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
+
+  #########################################
+  # best-ppn-api
+  # API en spring
+  best-ppn-api:
+    image: abesesr/convergence:${BESTPPNAPI_VERSION}
+    container_name: best-ppn-api
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    ports:
+      - ${BESTPPNAPI_PORT}:8083
+    environment:
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      URL_ONLINEID_2_PPN: ${BESTPPNAPI_URL_ONLINEID_2_PPN}
+      URL_PRINTID_2_PPN: ${BESTPPNAPI_URL_PRINTID_2_PPN}
+      URL_DAT_2_PPN: ${BESTPPNAPI_URL_DAT_2_PPN}
+      URL_DOI_2_PPN: ${BESTPPNAPI_URL_DOI_2_PPN}
+      MAIL_WS_URL: ${MAIL_WS_URL}
+      MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=best-ppn-api-watchtower-scope"
+
+  #######################################
+  # best-ppn-api-watchtower
+  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
+  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
+  best-ppn-api-watchtower:
+    image: containrrr/watchtower:1.4.0
+    container_name: best-ppn-api-watchtower
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_DEBUG: "false"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
+      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_NOTIFICATIONS: "slack"
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BEST_PPN_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
+      WATCHTOWER_SCOPE: "best-ppn-api-watchtower-scope"
+    labels:
+      - "com.centurylinklabs.watchtower.scope=best-ppn-api-watchtower-scope"
 
   ############################
   # logskbart-api
@@ -90,13 +143,13 @@ services:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
       # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
-      SPRING_PROFILES_ACTIVE: ${KBART2KAFKA_API_SPRING_PROFILES_ACTIVE}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       # Pour surcharger les paramètres spring du application-xxx.properties
       # ci-dessous via le système de .env de docker
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
-      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${LOGSKBART_API_SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS}
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SPRING_DATASOURCE_LOGSDB_JDBCURL: 'jdbc:postgresql://logskbart-db:5432/logskbart'
       SPRING_DATASOURCE_LOGSDB_USERNAME: ${LOGSKBART_DB_POSTGRES_USER}
       SPRING_DATASOURCE_LOGSDB_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
@@ -134,9 +187,9 @@ services:
       WATCHTOWER_DEBUG: "false"
       WATCHTOWER_NO_STARTUP_MESSAGE: "true"
       WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${CONVERGENCE_BACON_API_WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
       WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${CONVERGENCE_BACON_API_WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
       WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
       WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
       WATCHTOWER_SCOPE: "logskbart-watchtower-scope"
