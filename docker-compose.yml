@@ -37,33 +37,7 @@ services:
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
-      - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
-
-  #######################################
-  # kbart2kafka-watchtower
-  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
-  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
-  kbart2kafka-watchtower:
-    image: containrrr/watchtower:1.4.0
-    container_name: kbart2kafka-watchtower
-    restart: unless-stopped
-    mem_limit: ${MEM_LIMIT}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: 60
-      WATCHTOWER_DEBUG: "false"
-      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
-      WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${KBART2KAFKA_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
-      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
-      WATCHTOWER_SCOPE: "kbart2kafka-watchtower-scope"
-    labels:
-      - "com.centurylinklabs.watchtower.scope=kbart2kafka-watchtower-scope"
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
   #########################################
   # best-ppn-api
@@ -100,33 +74,38 @@ services:
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
-      - "com.centurylinklabs.watchtower.scope=best-ppn-api-watchtower-scope"
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
-  #######################################
-  # best-ppn-api-watchtower
-  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
-  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
-  best-ppn-api-watchtower:
-    image: containrrr/watchtower:1.4.0
-    container_name: best-ppn-api-watchtower
+  kafka2sudoc:
+    image: abesesr/convergence:${KAFKA2SUDOC_VERSION}
+    container_name: kafka2sudoc
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: 60
-      WATCHTOWER_DEBUG: "false"
-      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
-      WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${BEST_PPN_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
-      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
-      WATCHTOWER_SCOPE: "best-ppn-api-watchtower-scope"
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SUDOC_SERVEUR: ${KAFKA2SUDOC_SUDOC_SERVEUR}
+      SUDOC_PORT: ${KAFKA2SUDOC_SUDOC_PORT}
+      SUDOC_PASSWORD: ${KAFKA2SUDOC_SUDOC_PASSWORD}
+      SUDOC_LOGIN: ${KAFKA2SUDOC_SUDOC_LOGIN}
+      MAIL_WS_URL: ${MAIL_WS_URL}
+      MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
     labels:
-      - "com.centurylinklabs.watchtower.scope=best-ppn-api-watchtower-scope"
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
   ############################
   # logskbart-api
@@ -156,7 +135,6 @@ services:
       SPRING_DATASOURCE_BACON_JDBCURL: ${LOGSKBART_BACON_JDBCURL}
       SPRING_DATASOURCE_BACON_USERNAME: ${LOGSKBART_BACON_USERNAME}
       SPRING_DATASOURCE_BACON_PASSWORD: ${LOGSKBART_BACON_PASSWORD}
-
       LOADERTYPE: ${LOGSKBART_API_LOADERTYPE}
     ports:
       - ${LOGSKBART_API_HTTP_PORT}:8082
@@ -167,34 +145,7 @@ services:
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
-      - "com.centurylinklabs.watchtower.scope=logskbart-watchtower-scope"
-
-
-  #######################################
-  # logskbart-api-watchtower
-  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
-  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
-  logskbart-api-watchtower:
-    image: containrrr/watchtower:1.4.0
-    container_name: logskbart-api-watchtower
-    restart: unless-stopped
-    mem_limit: ${MEM_LIMIT}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      WATCHTOWER_CLEANUP: "true"
-      WATCHTOWER_POLL_INTERVAL: 60
-      WATCHTOWER_DEBUG: "false"
-      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
-      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
-      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
-      WATCHTOWER_NOTIFICATIONS: "slack"
-      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
-      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_API_WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
-      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
-      WATCHTOWER_SCOPE: "logskbart-watchtower-scope"
-    labels:
-      - "com.centurylinklabs.watchtower.scope=logskbart-watchtower-scope"
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
   ##############################
   # logskbart-db
@@ -282,3 +233,29 @@ services:
       - "co.elastic.logs/multiline.pattern='^.*Dumping PostgresSQL database'"
       - "co.elastic.logs/multiline.negate=true"
       - "co.elastic.logs/multiline.match=after"
+
+  #######################################
+  # convergence-bacon-watchtower
+  # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
+  # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
+  kbart2kafka-watchtower:
+    image: containrrr/watchtower:1.4.0
+    container_name: convergence-bacon-watchtower
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_DEBUG: "false"
+      WATCHTOWER_NO_STARTUP_MESSAGE: "true"
+      WATCHTOWER_WARN_ON_HEAD_FAILURE: "never"
+      WATCHTOWER_RUN_ONCE: ${WATCHTOWER_RUN_ONCE}
+      WATCHTOWER_NOTIFICATIONS: "slack"
+      WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL: ${WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL}
+      WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
+      WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
+      WATCHTOWER_SCOPE: "convergence-bacon-watchtower-scope"
+    labels:
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
