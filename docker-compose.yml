@@ -238,7 +238,7 @@ services:
   # convergence-bacon-watchtower
   # Conteneur chargé de mettre à jour automatiquement toutes les N secondes
   # les images docker des conteneurs surveillés (via le système de label/scope de watchtower)
-  kbart2kafka-watchtower:
+  convergence-bacon-watchtower:
     image: containrrr/watchtower:1.4.0
     container_name: convergence-bacon-watchtower
     restart: unless-stopped
