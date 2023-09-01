@@ -167,7 +167,8 @@ services:
       POSTGRES_DB: "logskbart"
       POSTGRES_USER: ${LOGSKBART_DB_POSTGRES_USER}
       POSTGRES_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
-
+    ports:
+      ${LOGSKBART_DB_EXTERNAL_PORT}:5432
     volumes:
       - ./volumes/logskbart-db/pgdata/:/var/lib/postgresql/data/
     labels:
