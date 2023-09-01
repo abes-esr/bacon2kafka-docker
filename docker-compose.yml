@@ -18,7 +18,7 @@ services:
     mem_limit: ${MEM_LIMIT}
     command: tail -F /dev/null
     volumes:
-      - /applis/KatTest/bacon/toLoad/:/app/kbart/
+      - ${LOGSKBART_API_PATH_TSVFILE}:/app/kbart/
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
@@ -168,7 +168,7 @@ services:
       POSTGRES_USER: ${LOGSKBART_DB_POSTGRES_USER}
       POSTGRES_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
     ports:
-      ${LOGSKBART_DB_EXTERNAL_PORT}:5432
+      - ${LOGSKBART_DB_EXTERNAL_PORT}:5432
     volumes:
       - ./volumes/logskbart-db/pgdata/:/var/lib/postgresql/data/
     labels:
