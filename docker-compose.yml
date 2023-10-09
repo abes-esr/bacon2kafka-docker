@@ -78,7 +78,7 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=best-ppn-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
@@ -114,7 +114,7 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka2sudoc"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
@@ -154,7 +154,7 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
@@ -180,7 +180,7 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=convergence"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
 
 
@@ -238,7 +238,7 @@ services:
     labels:
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-dumper"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=adhoc"
       # log multiline aussi pour ce conteneur avec des lignes qui ressemblent à ceci:
       # 2022-08-01.14:55:00 [NOTICE] ** [db-backup] Dumping PostgresSQL database: 'logskbart' and compressing with 'gzip'
