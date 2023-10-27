@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
-      - ${LOGSKBART_API_PATH_TSVFILE}:/tempLog/
+      - ${LOGSKBART_API_PATH_TSVFILE}:/app/tempLog/
     ports:
       - ${BESTPPNAPI_PORT}:8083
     environment:
@@ -131,7 +131,7 @@ services:
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
-      - ${LOGSKBART_API_PATH_TSVFILE}:/tempLog/
+      - ${LOGSKBART_API_PATH_TSVFILE}:/app/tempLog/
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
