@@ -85,6 +85,9 @@ services:
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
+  #########################################
+  # kafka2sudoc
+  # (écrite en java spring boot)
   kafka2sudoc:
     image: abesesr/convergence:${KAFKA2SUDOC_VERSION}
     container_name: kafka2sudoc
@@ -117,6 +120,38 @@ services:
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka2sudoc"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
+
+  #########################################
+  # bacon-provider-api
+  # API en spring
+  bacon-provider-api:
+    image: abesesr/convergence:${BACON_PROVIDER_API_VERSION}
+    container_name: bacon-provider-api
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    environment:
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
+      SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
+      SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
+    ports:
+      - ${BACON_PROVIDER_API_HTTP_PORT}:8082
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
