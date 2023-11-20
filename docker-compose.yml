@@ -47,6 +47,8 @@ services:
     container_name: best-ppn-api
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
+    volumes:
+      - ${LOGSKBART_API_PATH_TSVFILE}:/app/tempLog/
     ports:
       - ${BESTPPNAPI_PORT}:8083
     environment:
@@ -61,7 +63,7 @@ services:
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      SPRING_KAFKA_REGISTRY_URL: ${BESTPPNAPI_SPRING_KAFKA_REGISTRY_URL}
+      SPRING_KAFKA_REGISTRY_URL: ${KAFKA_REGISTRY_URL}
       SPRING_KAFKA_CONCURRENCY_NBTHREAD: ${BESTPPNAPI_SPRING_KAFKA_CONCURRENCY_NBTHREAD}
       SPRING_DATASOURCE_BASEXML_JDBCURL: ${BESTPPNAPI_SPRING_DATASOURCE_BASEXML_JDBCURL}
       SPRING_DATASOURCE_BASEXML_USERNAME: ${BESTPPNAPI_SPRING_DATASOURCE_BASEXML_USERNAME}
@@ -79,11 +81,14 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=best-ppn-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
+  #########################################
+  # kafka2sudoc
+  # (écrite en java spring boot)
   kafka2sudoc:
     image: abesesr/convergence:${KAFKA2SUDOC_VERSION}
     container_name: kafka2sudoc
@@ -101,17 +106,53 @@ services:
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SPRING_KAFKA_REGISTRY_URL: ${KAFKA_REGISTRY_URL}
       SUDOC_SERVEUR: ${KAFKA2SUDOC_SUDOC_SERVEUR}
       SUDOC_PORT: ${KAFKA2SUDOC_SUDOC_PORT}
       SUDOC_PASSWORD: ${KAFKA2SUDOC_SUDOC_PASSWORD}
       SUDOC_LOGIN: ${KAFKA2SUDOC_SUDOC_LOGIN}
+      SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
+      SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
+      SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
       MAIL_WS_URL: ${MAIL_WS_URL}
       MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka2sudoc"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
+      # pour que les mises à jour de cette image soient auto-déployées par watchtower
+      - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
+
+  #########################################
+  # bacon-provider-api
+  # API en spring
+  bacon-provider-api:
+    image: abesesr/convergence:${BACON_PROVIDER_API_VERSION}
+    container_name: bacon-provider-api
+    restart: unless-stopped
+    mem_limit: ${MEM_LIMIT}
+    environment:
+      # Pour basculer sur bon application-xxx.properties préalablement embarqué
+      # dans le code ici:
+      # https://github.com/abes-esr/abes-hello-back/tree/develop/web/src/main/resources/
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      # Pour surcharger les paramètres spring du application-xxx.properties
+      # ci-dessous via le système de .env de docker
+      # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
+      # pour la liste de tous les champs qu'on peut surcharger,
+      # voir le contenu des application-xxx.properties embarqués dans le code sources
+      SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
+      SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
+      SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
+    ports:
+      - ${BACON_PROVIDER_API_HTTP_PORT}:8084
+    labels:
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/processors.add_fields.target="
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
@@ -126,7 +167,7 @@ services:
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
-      - ${LOGSKBART_API_PATH_TSVFILE}:/tmp/
+      - ${LOGSKBART_API_PATH_TSVFILE}:/app/tempLog/
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
@@ -141,17 +182,13 @@ services:
       SPRING_DATASOURCE_LOGSDB_JDBCURL: 'jdbc:postgresql://logskbart-db:5432/logskbart'
       SPRING_DATASOURCE_LOGSDB_USERNAME: ${LOGSKBART_DB_POSTGRES_USER}
       SPRING_DATASOURCE_LOGSDB_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
-      SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
-      SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
-      SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
-      LOADERTYPE: ${LOGSKBART_API_LOADERTYPE}
     ports:
       - ${LOGSKBART_API_HTTP_PORT}:8082
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
@@ -177,7 +214,7 @@ services:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=convergence"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
 
 
@@ -235,7 +272,7 @@ services:
     labels:
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-dumper"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=adhoc"
       # log multiline aussi pour ce conteneur avec des lignes qui ressemblent à ceci:
       # 2022-08-01.14:55:00 [NOTICE] ** [db-backup] Dumping PostgresSQL database: 'logskbart' and compressing with 'gzip'

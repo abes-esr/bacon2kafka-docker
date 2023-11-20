@@ -15,39 +15,6 @@ Le docker-compose.yml définit les containers suivants (hors Watchtower)
 - logskbart-db-dumper : système de sauvegarde de la base de données postgresql
 - logskbart-db-adminer : interface Web d'accès à la base de données postgresql
 
-## URLs de kbart2kafka
-
-Les URLs correspondant aux déploiements en local, dev, test et prod de kbart2kafka sont les suivantes :
-
-- local :
-    - http://127.0.0.1:8080/ : URL interne de kbart2kafka-api
-- dev :
-    - http://cafeier-dev.v212.abes.fr:8080/ : URL de kbart2kafka-api
-- test :
-    - http://cafeier-test.v202.abes.fr:8080/ :  URL de kbart2kafka-api
-- prod
-    - pas encore defini
-
-## URLs de logskbart
-
-Les URLs correspondant aux déploiements en local, dev, test et prod de logskbart sont les suivantes : 
-
-- local :
-    - http://127.0.0.1:8083/ : URL interne de kbart2kafka-api
-- dev :
-    - http://cafeier-dev.v212.abes.fr:8083/ : URL de logskbart-api
-- test :
-    - http://cafeier-test.v202.abes.fr:8083/ :  URL de logskbart-api
-- prod
-    - pas encore defini
-
-## URLs adminer 
-
-Les URLs permettant d'accéder à l'adminer de la base postgresql sont les suivantes : 
-
-- dev : http://cafeier-dev.v212.abes.fr:16082/ 
-- test : http://cafeier-test.v202.abes.fr:16082/
-
 ## Prérequis
 
 Disposer de :
