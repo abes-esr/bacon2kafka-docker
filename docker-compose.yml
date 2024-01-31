@@ -246,7 +246,7 @@ services:
   # (dump tous les jours pour les sauvegardes)
   # https://github.com/tiredofit/docker-db-backup
   logskbart-db-dumper:
-    image: tiredofit/db-backup:3.3.11
+    image: tiredofit/db-backup:4.0.35
     container_name: logskbart-db-dumper
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
@@ -263,9 +263,9 @@ services:
       DB_NAME: "logskbart"
       DB_USER: ${LOGSKBART_DB_POSTGRES_USER}
       DB_PASS: ${LOGSKBART_DB_POSTGRES_PASSWORD}
-      DB_DUMP_BEGIN: "0130"
-      DB_DUMP_FREQ: 1440
-      DB_CLEANUP_TIME: 10080
+      DEFAULT_BACKUP_BEGIN: "0130"
+      DEFAULT_BACKUP_INTERVAL: 1440
+      DEFAULT_CLEANUP_TIME: 10080
       SPLIT_DB: "true"
       COMPRESSION: "GZ"
       DEBUG_MODE: "false"
