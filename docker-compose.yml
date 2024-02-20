@@ -34,6 +34,7 @@ services:
       SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
       SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
       SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
+    tty: true
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=true"
