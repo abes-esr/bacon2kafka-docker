@@ -256,6 +256,7 @@ services:
     mem_limit: ${MEM_LIMIT}
     volumes:
       - ./volumes/logskbart-db/dump/:/backup/
+      - ./volumes/logskbart-db-dumper/script/:/assets/scripts/post/:w
     depends_on:
       - logskbart-db
     environment:
@@ -270,11 +271,13 @@ services:
       DEFAULT_BACKUP_BEGIN: "0130"
       DEFAULT_BACKUP_INTERVAL: 1440
       DEFAULT_CLEANUP_TIME: 10080
-      SPLIT_DB: "true"
-      COMPRESSION: "GZ"
+      DEFAULT_COMPRESSION: "GZ"
       DEBUG_MODE: "false"
       CONTAINER_ENABLE_SCHEDULING: "false"
       CONTAINER_ENABLE_MONITORING: "false"
+      DEFAULT_POST_SCRIPT: /assets/scripts/post/script.sh
+      NOTIFICATION_SLACK_HOOK_URL: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_HOOK_URL}
+      NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_IDENTIFIER}
     labels:
       - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
