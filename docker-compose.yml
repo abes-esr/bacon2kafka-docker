@@ -16,7 +16,6 @@ services:
     container_name: kbart2kafka
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
-    command: tail -F /dev/null
     volumes:
       - ${LOGSKBART_API_PATH_TSVFILE}:/app/kbart/
     environment:
@@ -34,7 +33,6 @@ services:
       SPRING_DATASOURCE_BACON_JDBCURL: ${BACON_JDBCURL}
       SPRING_DATASOURCE_BACON_USERNAME: ${BACON_USERNAME}
       SPRING_DATASOURCE_BACON_PASSWORD: ${BACON_PASSWORD}
-    tty: true
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
@@ -189,6 +187,8 @@ services:
       SPRING_DATASOURCE_LOGSDB_JDBCURL: 'jdbc:postgresql://logskbart-db:5432/logskbart'
       SPRING_DATASOURCE_LOGSDB_USERNAME: ${LOGSKBART_DB_POSTGRES_USER}
       SPRING_DATASOURCE_LOGSDB_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
+      MAIL_WS_URL: ${MAIL_WS_URL}
+      MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
     ports:
       - ${LOGSKBART_API_HTTP_PORT}:8082
     labels:
