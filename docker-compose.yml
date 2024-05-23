@@ -37,7 +37,7 @@ services:
     tty: true
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=kbart2kafka"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
@@ -84,7 +84,7 @@ services:
       MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=best-ppn-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
@@ -112,6 +112,7 @@ services:
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SPRING_KAFKA_REGISTRY_URL: ${KAFKA_REGISTRY_URL}
+      SPRING_KAFKA_CONCURRENCY_NBTHREAD: ${KAFKA_CONCURRENCY_NBTHREAD}
       SUDOC_SERVEUR: ${KAFKA2SUDOC_SUDOC_SERVEUR}
       SUDOC_PORT: ${KAFKA2SUDOC_SUDOC_PORT}
       SUDOC_PASSWORD: ${KAFKA2SUDOC_SUDOC_PASSWORD}
@@ -124,7 +125,7 @@ services:
       MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=kafka2sudoc"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
@@ -156,7 +157,7 @@ services:
       - ${BACON_PROVIDER_API_HTTP_PORT}:8084
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
@@ -192,7 +193,7 @@ services:
       - ${LOGSKBART_API_HTTP_PORT}:8082
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-api"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=java-spring"
@@ -218,7 +219,7 @@ services:
       - ./volumes/logskbart-db/pgdata/:/var/lib/postgresql/data/
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
@@ -279,7 +280,7 @@ services:
       NOTIFICATION_SLACK_HOOK_URL: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_HOOK_URL}
       NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_IDENTIFIER}
     labels:
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-dumper"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=adhoc"
