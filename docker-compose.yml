@@ -64,8 +64,7 @@ services:
       # https://www.linkedin.com/pulse/externalizing-properties-spring-boot-application-docker-phani-bushan
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
-      ABES_KAFKA_PRODUCER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      ABES_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      ABES_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       ABES_KAFKA_REGISTRY_URL: ${KAFKA_REGISTRY_URL}
       ABES_KAFKA_CONCURRENCY_NBTHREAD: ${KAFKA_CONCURRENCY_NBTHREAD}
       SPRING_DATASOURCE_BASEXML_JDBCURL: ${BESTPPNAPI_SPRING_DATASOURCE_BASEXML_JDBCURL}
