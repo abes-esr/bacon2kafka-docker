@@ -313,5 +313,7 @@ services:
       WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER: ${WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER}
       WATCHTOWER_NOTIFICATION_SLACK_CHANNEL: "#notif-convergence"
       WATCHTOWER_SCOPE: "convergence-bacon-watchtower-scope"
+      REPO_USER: ${WATCHTOWER_DOCKERHUB_USER}
+      REPO_PASS: ${WATCHTOWER_DOCKERHUB_PASS}
     labels:
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
