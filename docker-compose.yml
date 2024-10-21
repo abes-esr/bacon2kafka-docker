@@ -252,10 +252,10 @@ services:
   #######################################
   # logskbart-kibana
   # kibana est le frontoffice de l'elasticsearch de logskbart
-  theses-kibana:
+  logskbart-kibana:
     container_name: logskbart-kibana
     depends_on:
-      - theses-elasticsearch
+      - logskbart-elasticsearch
     image: docker.elastic.co/kibana/kibana:8.10.3
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
