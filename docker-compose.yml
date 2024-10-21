@@ -168,6 +168,8 @@ services:
   logskbart-api:
     image: abesesr/convergence:${LOGSKBART_API_VERSION}
     container_name: logskbart-api
+    depends_on:
+      - logskbart-elasticsearch
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
@@ -230,7 +232,6 @@ services:
       # cf https://www.elastic.co/guide/en/elasticsearch/reference/current/geoip-processor.html#geoip-cluster-settings
       # cf https://www.elastic.co/guide/en/elasticsearch/reference/current/executable-jna-tmpdir.html
       - ingest.geoip.downloader.enabled=false
-      - ES_TMPDIR=/usr/share/elasticsearch/tmp
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
       - xpack.security.enabled=false
       # licence à utiliser (basic ou trial pour un essai de 30 jours)
