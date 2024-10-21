@@ -260,7 +260,6 @@ services:
     memswap_limit: ${MEM_LIMIT}
     cpus: ${CPU_LIMIT}
     environment:
-      SERVER_BASEPATH: "/kibana"
       ELASTICSEARCH_HOSTS: http://logskbart-elasticsearch:9200
     ports:
       - "5601:5601"
