@@ -183,9 +183,7 @@ services:
       # pour la liste de tous les champs qu'on peut surcharger,
       # voir le contenu des application-xxx.properties embarqués dans le code sources
       ABES_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      SPRING_DATASOURCE_LOGSDB_JDBCURL: 'jdbc:postgresql://logskbart-db:5432/logskbart'
-      SPRING_DATASOURCE_LOGSDB_USERNAME: ${LOGSKBART_DB_POSTGRES_USER}
-      SPRING_DATASOURCE_LOGSDB_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
+      SPRING_ELASTICSEARCH_URIS: http://logskbart-elasticsearch:9200
       ABES_KAFKA_CONCURRENCY_NBTHREAD: ${KAFKA_CONCURRENCY_NBTHREAD}
       MAIL_WS_URL: ${MAIL_WS_URL}
       MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
@@ -200,96 +198,82 @@ services:
       # pour que les mises à jour de cette image soient auto-déployées par watchtower
       - "com.centurylinklabs.watchtower.scope=convergence-bacon-watchtower-scope"
 
-  ##############################
-  # logskbart-db
-  # Base de données postgresql de logskbart
-  logskbart-db:
-    image: abesesr/postgres-fr_fr:15.1.0
-    container_name: logskbart-db
+
+
+  #######################################
+  # logskbart-elasticsearch
+  # noeud n°1 de l'elasticsearch de theses.fr
+  # Ref. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
+  # cf https://github.com/abes-esr/theses-es-cluster-docker#readme pour le mode cluster
+  logskbart-elasticsearch:
+    container_name: logskbart-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.3
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
-    environment:
-      # cf https://github.com/docker-library/docs/blob/master/postgres/README.md#environment-variables
-      POSTGRES_DB: "logskbart"
-      POSTGRES_USER: ${LOGSKBART_DB_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${LOGSKBART_DB_POSTGRES_PASSWORD}
-    ports:
-      - ${LOGSKBART_DB_EXTERNAL_PORT}:5432
+    memswap_limit: ${MEM_LIMIT}
+    cpus: ${CPU_LIMIT}
     volumes:
-      - ./volumes/logskbart-db/pgdata/:/var/lib/postgresql/data/
+      - ./volumes/logskbart-db/esdata/:/usr/share/elasticsearch/data/
+    ports:
+      # réglage explicites des ports internes et externes pour pouvoir fonctionner en cluster
+      # cf https://blog.cri.epita.fr/post/2019-06-10-elasticsearch-cluster-formation-issue/
+      - "9200:9200"
+    environment:
+      # pour désactiver les recherches complexe (conseillé par https://checkups.opster.com/checkup/result/75470)
+      # "Recommendations : Allow expensive queries can be disabled by setting config search.allow_expensive_queries: false in the yaml config file and then restarting the node."
+      - search.allow_expensive_queries=true
+      # pour la quantité de données mises en cache
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/shard-request-cache.html#_cache_settings
+      - indices.requests.cache.size=10%
+      # réglage pour désactiver le swap: https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html#_disable_swapping
+      - bootstrap.memory_lock=true
+      # pour éviter que les dump geoip soient téléchargés régulièrement dans /tmp/
+      # cf https://abes-esr.atlassian.net/browse/THE-188
+      # cf https://www.elastic.co/guide/en/elasticsearch/reference/current/geoip-processor.html#geoip-cluster-settings
+      # cf https://www.elastic.co/guide/en/elasticsearch/reference/current/executable-jna-tmpdir.html
+      - ingest.geoip.downloader.enabled=false
+      - ES_TMPDIR=/usr/share/elasticsearch/tmp
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+      # licence à utiliser (basic ou trial pour un essai de 30 jours)
+      - xpack.license.self_generated.type=basic
+      # pour avoir plus ou moins de logs elasticsearch
+      # DEBUG ou INFO (en prod mettre INFO)
+      - logger.org.elasticsearch.discovery=INFO
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
+      - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
       - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
-      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=postgresql"
-
-
-
-  #################################
-  # logskbart-db-adminer
-  # Interface d'admin de postgresql
-  logskbart-db-adminer:
-    image: adminer:4.8.1
-    container_name: logskbart-db-adminer
-    restart: unless-stopped
-    mem_limit: ${MEM_LIMIT}
-    ports:
-      - ${LOGSKBART_DB_ADMINER_HTTP_PORT}:8080
-    depends_on:
-      - logskbart-db
-    environment:
-      ADMINER_DEFAULT_SERVER: "logskbart-db"
-    logging:
-      driver: none # pas de log pour adminer pour ne pas polluer
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=elasticsearch"
 
 
 
   #######################################
-  # logskbart-db-dumper
-  # Dump de la base de données postgresql
-  # (dump tous les jours pour les sauvegardes)
-  # https://github.com/tiredofit/docker-db-backup
-  logskbart-db-dumper:
-    image: tiredofit/db-backup:4.0.35
-    container_name: logskbart-db-dumper
+  # logskbart-kibana
+  # kibana est le frontoffice de l'elasticsearch de logskbart
+  theses-kibana:
+    container_name: logskbart-kibana
+    depends_on:
+      - theses-elasticsearch
+    image: docker.elastic.co/kibana/kibana:8.10.3
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
+    memswap_limit: ${MEM_LIMIT}
+    cpus: ${CPU_LIMIT}
     volumes:
-      - ./volumes/logskbart-db/dump/:/backup/
-      - ./volumes/logskbart-db-dumper/script/:/assets/scripts/post/:w
-    depends_on:
-      - logskbart-db
+      - ./volumes/logskbart-kibana/:/usr/share/kibana/data/
     environment:
-      # DB_DUMP_BEGIN: "0130" <= tous les jours à 1h30 du matin GMT
-      # DB_DUMP_FREQ: 1440 <= chaque jour
-      # DB_CLEANUP_TIME: 10080 (1440*7) <= conserve uniquement les 7 derniers jours
-      DB_TYPE: "pgsql"
-      DB_HOST: "logskbart-db"
-      DB_NAME: "logskbart"
-      DB_USER: ${LOGSKBART_DB_POSTGRES_USER}
-      DB_PASS: ${LOGSKBART_DB_POSTGRES_PASSWORD}
-      DEFAULT_BACKUP_BEGIN: "0130"
-      DEFAULT_BACKUP_INTERVAL: 1440
-      DEFAULT_CLEANUP_TIME: 10080
-      DEFAULT_COMPRESSION: "GZ"
-      DEBUG_MODE: "false"
-      CONTAINER_ENABLE_SCHEDULING: "false"
-      CONTAINER_ENABLE_MONITORING: "false"
-      DEFAULT_POST_SCRIPT: /assets/scripts/post/script.sh
-      NOTIFICATION_SLACK_HOOK_URL: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_HOOK_URL}
-      NOTIFICATION_SLACK_IDENTIFIER: ${LOGSKBART_DB_DUMPER_NOTIFICATION_SLACK_IDENTIFIER}
+      SERVER_BASEPATH: "/kibana"
+      ELASTICSEARCH_HOSTS: http://logskbart-elasticsearch:9200
+    ports:
+      - "5601:5601"
     labels:
-      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
+      # pour envoyer les logs dans le puits de log de l'abes
+      - "co.elastic.logs/enabled=true"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-dumper"
-      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=adhoc"
-      # log multiline aussi pour ce conteneur avec des lignes qui ressemblent à ceci:
-      # 2022-08-01.14:55:00 [NOTICE] ** [db-backup] Dumping PostgresSQL database: 'logskbart' and compressing with 'gzip'
-      - "co.elastic.logs/multiline.type=pattern"
-      - "co.elastic.logs/multiline.pattern='^.*Dumping PostgresSQL database'"
-      - "co.elastic.logs/multiline.negate=true"
-      - "co.elastic.logs/multiline.match=after"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
+      - "co.elastic.logs/processors.add_fields.fields.abes_middleware=kibana"
 
   #######################################
   # convergence-bacon-watchtower
