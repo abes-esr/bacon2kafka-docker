@@ -212,8 +212,6 @@ services:
     mem_limit: ${MEM_LIMIT}
     memswap_limit: ${MEM_LIMIT}
     cpus: ${CPU_LIMIT}
-    volumes:
-      - ./volumes/logskbart-elasticsearch/esdata/:/usr/share/elasticsearch/data/
     ports:
       # réglage explicites des ports internes et externes pour pouvoir fonctionner en cluster
       # cf https://blog.cri.epita.fr/post/2019-06-10-elasticsearch-cluster-formation-issue/
@@ -260,8 +258,6 @@ services:
     mem_limit: ${MEM_LIMIT}
     memswap_limit: ${MEM_LIMIT}
     cpus: ${CPU_LIMIT}
-    volumes:
-      - ./volumes/logskbart-kibana/:/usr/share/kibana/data/
     environment:
       SERVER_BASEPATH: "/kibana"
       ELASTICSEARCH_HOSTS: http://logskbart-elasticsearch:9200
