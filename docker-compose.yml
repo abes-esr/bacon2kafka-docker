@@ -202,9 +202,7 @@ services:
 
   #######################################
   # logskbart-elasticsearch
-  # noeud n°1 de l'elasticsearch de theses.fr
   # Ref. https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html
-  # cf https://github.com/abes-esr/theses-es-cluster-docker#readme pour le mode cluster
   logskbart-elasticsearch:
     container_name: logskbart-elasticsearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.3
@@ -213,7 +211,7 @@ services:
     memswap_limit: ${MEM_LIMIT}
     cpus: ${CPU_LIMIT}
     volumes:
-      - ./volumes/logskbart-db/esdata/:/usr/share/elasticsearch/data/
+      - ./volumes/logskbart-elasticsearch/esdata/:/usr/share/elasticsearch/data/
     ports:
       # réglage explicites des ports internes et externes pour pouvoir fonctionner en cluster
       # cf https://blog.cri.epita.fr/post/2019-06-10-elasticsearch-cluster-formation-issue/
@@ -242,9 +240,9 @@ services:
       - logger.org.elasticsearch.discovery=INFO
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-elasticsearch"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=elasticsearch"
 
 
@@ -270,9 +268,9 @@ services:
       - "5601:5601"
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
-      - "co.elastic.logs/enabled=true"
+      - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
       - "co.elastic.logs/processors.add_fields.target="
-      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-db"
+      - "co.elastic.logs/processors.add_fields.fields.abes_appli=logskbart-kibana"
       - "co.elastic.logs/processors.add_fields.fields.abes_middleware=kibana"
 
   #######################################
