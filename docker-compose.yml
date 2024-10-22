@@ -238,6 +238,7 @@ services:
       # pour avoir plus ou moins de logs elasticsearch
       # DEBUG ou INFO (en prod mettre INFO)
       - logger.org.elasticsearch.discovery=INFO
+      - http.max_content_length=500mb
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
