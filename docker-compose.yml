@@ -244,7 +244,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl -s 'https://localhost:9200/_cluster/health?timeout=5s&pretty=true' | grep status | grep -E -q 'yellow|green'",
+          "curl -s 'http://logskbart-elasticsearch:9200/_cluster/health?timeout=5s&pretty=true' | grep status | grep -E -q 'yellow|green'",
         ]
       interval: 10s
       timeout: 10s
