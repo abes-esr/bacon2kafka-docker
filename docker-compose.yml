@@ -169,7 +169,8 @@ services:
     image: abesesr/convergence:${LOGSKBART_API_VERSION}
     container_name: logskbart-api
     depends_on:
-      - logskbart-elasticsearch
+      logskbart-elasticsearch:
+        condition: service_healthy
     restart: unless-stopped
     mem_limit: ${MEM_LIMIT}
     volumes:
