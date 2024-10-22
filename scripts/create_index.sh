@@ -1,4 +1,4 @@
-curl -X PUT "$1/logkbart
+curl -X PUT "localhost:9200/$1/logkbart" -H 'Content-Type: application/json' -d'
 {
 	"settings": {
 		"number_of_shards": 5,
@@ -44,4 +44,4 @@ curl -X PUT "$1/logkbart
 			}
 		}
 	}
-}"
+}'
