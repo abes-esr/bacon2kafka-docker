@@ -240,6 +240,15 @@ services:
       # DEBUG ou INFO (en prod mettre INFO)
       - logger.org.elasticsearch.discovery=INFO
       - http.max_content_length=500mb
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s 'https://localhost:9200}/_cluster/health?timeout=5s&pretty=true' | grep status | grep -E -q 'yellow|green'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
