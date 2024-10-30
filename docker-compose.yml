@@ -18,6 +18,8 @@ services:
     mem_limit: ${MEM_LIMIT}
     volumes:
       - ${LOGSKBART_API_PATH_TSVFILE}:/app/kbart/
+    ports:
+      - ${KBART2KAFKA_PORT}:8080
     environment:
       # Pour basculer sur bon application-xxx.properties préalablement embarqué
       # dans le code ici:
