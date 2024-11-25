@@ -80,6 +80,7 @@ services:
       URL_DOI2PPN: ${BESTPPNAPI_URL_DOI_2_PPN}
       MAIL_WS_URL: ${MAIL_WS_URL}
       MAIL_WS_RECIPIENT: ${MAIL_WS_RECIPIENT}
+      SPRING_JPA_BACON_SHOW-SQL: false
     labels:
       # pour envoyer les logs dans le puits de log de l'abes
       - "co.elastic.logs/enabled=${LOG_ELASTIC_ENABLED}"
